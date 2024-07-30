@@ -1,3 +1,9 @@
+/* Copyright (c) Ronan LE MEILLAT 2024
+ * Licensed under the AGPLv3 License
+ * https://www.gnu.org/licenses/agpl-3.0.html
+ */
+// Package main is the entry point for the AzurePDFTranslator application.
+// It provides a command-line interface for translating PDF documents using Azure Translator and storing the translated documents in Azure Blob Storage.
 package main
 
 import (
@@ -9,6 +15,7 @@ import (
 	"translator/internal/translator"
 )
 
+// Constants for environment variable names
 const (
 	envTranslatorEndpoint = "TRANSLATOR_ENDPOINT"
 	envTranslatorKey      = "TRANSLATOR_KEY"
@@ -20,6 +27,8 @@ const (
 
 var verbose bool
 
+// main is the entry point of the application.
+// It parses command-line arguments, loads configuration from file if specified, validates inputs, and performs the translation.
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -27,7 +36,11 @@ func main() {
 	}
 }
 
+// run is the main logic of the application.
+// It sets up the translator configuration, validates inputs, and performs the translation.
+// It returns an error if any step fails.
 func run() error {
+	// Parse command-line arguments
 	endpoint := flag.String("endpoint", os.Getenv(envTranslatorEndpoint), "Azure Translator API endpoint")
 	key := flag.String("key", os.Getenv(envTranslatorKey), "Azure Translator API key")
 	region := flag.String("region", os.Getenv(envTranslatorRegion), "Azure region")
@@ -43,17 +56,20 @@ func run() error {
 	flag.BoolVar(&verbose, "v", false, "enable verbose logging")
 	flag.Parse()
 
+	// Load configuration from file if specified
 	if *configFile != "" {
-		err := loadConfigFromFile(*configFile, endpoint, key, region, blobAccount, blobAccountKey, blobContainer)
+		err := loadConfigFromFile(*configFile, endpoint, key, region, blobAccount, blobAccountKey, blobContainer, &verbose)
 		if err != nil {
 			return err
 		}
 	}
 
+	// Validate inputs
 	if err := validateInputs(*endpoint, *key, *region, *in, *out, *to, *blobAccount, *blobAccountKey, *blobContainer); err != nil {
 		return err
 	}
 
+	// Set up translator configuration
 	config := translator.TranslatorConfig{
 		TranslatorEndpoint: *endpoint,
 		TranslatorKey:      *key,
@@ -62,12 +78,16 @@ func run() error {
 		BlobAccountKey:     *blobAccountKey,
 		BlobContainerName:  *blobContainer,
 		Timeout:            *timeout,
-		Verbose:            true,
+		Verbose:            verbose,
 	}
+
+	// Perform the translation
 	return translator.TranslateDocument(*in, *out, *from, *to, config)
 }
 
-func loadConfigFromFile(configFile string, endpoint, key, region, blobAccount, blobAccountKey, blobContainer *string) error {
+// loadConfigFromFile loads the translator configuration from a JSON file.
+// It updates the endpoint, key, region, blobAccount, blobAccountKey, blobContainer, and verbose variables with the values from the file.
+func loadConfigFromFile(configFile string, endpoint, key, region, blobAccount, blobAccountKey, blobContainer *string, verbose *bool) error {
 	file, err := os.Open(configFile)
 	if err != nil {
 		return err
@@ -86,10 +106,13 @@ func loadConfigFromFile(configFile string, endpoint, key, region, blobAccount, b
 	*blobAccount = config.BlobAccountName
 	*blobAccountKey = config.BlobAccountKey
 	*blobContainer = config.BlobContainerName
+	*verbose = config.Verbose
 
 	return nil
 }
 
+// validateInputs checks if all the required inputs are provided.
+// It returns an error if any required input is missing.
 func validateInputs(endpoint, key, region, in, out, to, blobAccount, blobAccountKey, blobContainer string) error {
 	missingArgs := []string{}
 	if endpoint == "" {
