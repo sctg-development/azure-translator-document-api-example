@@ -48,12 +48,12 @@ You can use a JSON config file to specify the configuration options. Create a JS
 
 ```json
 {
-  "blobAccount": "your_blob_storage_account_name",
+  "blobAccountName": "your_blob_storage_account_name",
   "blobAccountKey": "your_blob_storage_account_key",
-  "blobContainer": "your_container_name",
-  "endpoint": "https://your_translator.cognitiveservices.azure.com/",
-  "key": "your_translator_api_key",
-  "region": "your_azure_region",
+  "blobContainerName": "your_container_name",
+  "translatorEndpoint": "https://your_translator.cognitiveservices.azure.com/",
+  "translatorKey": "your_translator_api_key",
+  "translatorRegion": "your_azure_region",
   "timeout": 30,
   "verbose": true
 }
