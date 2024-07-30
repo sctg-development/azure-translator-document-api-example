@@ -9,6 +9,7 @@ This project demonstrates the usage of Azure Translator Document API to translat
 - Upload and download files from Azure Blob Storage
 - Generate and use SAS tokens for secure blob access
 - Verbose logging option for debugging
+- Configuration via config file
 
 ## Prerequisites
 
@@ -37,6 +38,31 @@ export BLOB_STORAGE_CONTAINER_NAME="your_container_name"
 export TRANSLATOR_ENDPOINT="https://your_translator.cognitiveservices.azure.com/"
 export TRANSLATOR_KEY="your_translator_api_key"
 export TRANSLATOR_REGION="your_azure_region"
+```
+
+Alternatively, you can use a configuration file to provide these settings.
+
+### Using a Config File
+
+You can use a JSON config file to specify the configuration options. Create a JSON file (e.g., `config.json`) with the following structure:
+
+```json
+{
+  "blobAccount": "your_blob_storage_account_name",
+  "blobAccountKey": "your_blob_storage_account_key",
+  "blobContainer": "your_container_name",
+  "endpoint": "https://your_translator.cognitiveservices.azure.com/",
+  "key": "your_translator_api_key",
+  "region": "your_azure_region",
+  "timeout": 30,
+  "verbose": true
+}
+```
+
+Run the program using the `-config` option:
+
+```sh
+./translator -config ./config.json -in ./input_file.docx -out ./output_file.docx -to fr
 ```
 
 ## Usage

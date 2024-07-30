@@ -47,14 +47,14 @@ const (
 
 // TranslatorConfig represents the configuration for the Translator service.
 type TranslatorConfig struct {
-	BlobAccountName    string
-	BlobAccountKey     string
-	BlobContainerName  string
-	TranslatorEndpoint string
-	TranslatorKey      string
-	TranslatorRegion   string
-	Timeout            int
-	Verbose            bool
+	BlobAccountName    string `json:"blobAccountName"`
+	BlobAccountKey     string `json:"blobAccountKey"`
+	BlobContainerName  string `json:"blobContainerName"`
+	TranslatorEndpoint string `json:"translatorEndpoint"`
+	TranslatorKey      string `json:"translatorKey"`
+	TranslatorRegion   string `json:"translatorRegion"`
+	Timeout            int    `json:"timeout"`
+	Verbose            bool   `json:"verbose"`
 }
 
 // uploadFileToBlobStorage uploads a local file to Azure Blob Storage.
@@ -305,7 +305,6 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	region := config.TranslatorRegion
 	blobAccountName := config.BlobAccountName
 	blobContainerName := config.BlobContainerName
-	timeout := config.Timeout
 	verbose := config.Verbose
 	// Generate a UUID for the translation job.
 	jobID := generateUUIDv4WithoutHyphens()
@@ -342,8 +341,6 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	}
 
 	// Translate the document.
-	//TODO: Implement the translation logic here.
-	_ = jsonDocument
 	basePath := fmt.Sprintf("%s/translator/document/batches", endpoint)
 	uri := fmt.Sprintf("%s?api-version=%s", basePath, APIVersion)
 	method := "POST"
@@ -368,19 +365,7 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	}
 	if res.StatusCode >= 200 && res.StatusCode < 300 {
 		// Wait for the translated document to be ready in the target container.
-		maxTry := timeout
-		for {
-			err = downloadFileFromBlobStorage(config, destinationFile, dstJobID)
-			if err == nil {
-				break
-			}
-			if maxTry == 0 {
-				break
-			}
-			fmt.Println("File not yet ready, wait for 1s…")
-			time.Sleep(1 * time.Second)
-			maxTry--
-		}
+		_ = waitForTranslatedFile(config, destinationFile, dstJobID)
 	}
 
 	// Delete the file from Azure Blob Storage.
@@ -393,4 +378,24 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 		return fmt.Errorf("error deleting translated document: %v", err)
 	}
 	return nil
+}
+
+// waitForTranslatedFile waits for the translated file to be available in the destination storage.
+// It continuously checks for the availability of the file by downloading it from the blob storage.
+// The function takes the TranslatorConfig, destinationFile path, and dstJobID as parameters.
+// It returns an error if the file is not available within the specified timeout period.
+func waitForTranslatedFile(config TranslatorConfig, destinationFile string, dstJobID string) error {
+	maxTry := config.Timeout
+	for {
+		err := downloadFileFromBlobStorage(config, destinationFile, dstJobID)
+		if err == nil {
+			return nil
+		}
+		if maxTry <= 0 {
+			return fmt.Errorf("timeout waiting for the translated document")
+		}
+		fmt.Println("File not yet ready, wait for 1s…")
+		time.Sleep(1 * time.Second)
+		maxTry--
+	}
 }
