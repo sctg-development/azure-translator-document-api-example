@@ -45,15 +45,28 @@ const (
 	APIVersion = "2024-05-01"
 )
 
+// TranslatorConfig represents the configuration for the Translator service.
+type TranslatorConfig struct {
+	BlobAccountName    string
+	BlobAccountKey     string
+	BlobContainerName  string
+	TranslatorEndpoint string
+	TranslatorKey      string
+	TranslatorRegion   string
+	Timeout            int
+	Verbose            bool
+}
+
 // uploadFileToBlobStorage uploads a local file to Azure Blob Storage.
 // It takes the following parameters:
-// - accountName: The name of the Azure Storage account.
-// - accountKey: The access key for the Azure Storage account.
-// - containerName: The name of the container in Azure Blob Storage.
+// - config: The TranslatorConfig object.
 // - filePath: The path to the local file to be uploaded.
 // - blobName: The name of the blob in Azure Blob Storage.
 // It returns an error if any.
-func uploadFileToBlobStorage(accountName, accountKey, containerName, filePath, blobName string) error {
+func uploadFileToBlobStorage(config TranslatorConfig, filePath, blobName string) error {
+	accountName := config.BlobAccountName
+	accountKey := config.BlobAccountKey
+	containerName := config.BlobContainerName
 	// Create a default request pipeline using your storage account name and account key.
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
@@ -102,12 +115,13 @@ func uploadFileToBlobStorage(accountName, accountKey, containerName, filePath, b
 
 // deleteFileFromBlobStorage deletes a file from Azure Blob Storage.
 // It takes the following parameters:
-// - accountName: The name of the Azure Storage account.
-// - accountKey: The access key for the Azure Storage account.
-// - containerName: The name of the container in Azure Blob Storage.
+// - config: The TranslatorConfig object.
 // - blobName: The name of the blob in Azure Blob Storage.
 // It returns an error if any.
-func deleteFileFromBlobStorage(accountName, accountKey, containerName, blobName string) error {
+func deleteFileFromBlobStorage(config TranslatorConfig, blobName string) error {
+	accountName := config.BlobAccountName
+	accountKey := config.BlobAccountKey
+	containerName := config.BlobContainerName
 	// Create a default request pipeline using your storage account name and account key.
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
@@ -138,13 +152,14 @@ func deleteFileFromBlobStorage(accountName, accountKey, containerName, blobName 
 
 // dowloadFileFromBlobStorage downloads a file from Azure Blob Storage.
 // It takes the following parameters:
+// - config: The TranslatorConfig object.
 // - destFilePath: The path to save the downloaded file.
-// - accountName: The name of the Azure Storage account.
-// - accountKey: The access key for the Azure Storage account.
-// - containerName: The name of the container in Azure Blob Storage.
 // - blobName: The name of the blob in Azure Blob Storage.
 // It returns an error if any.
-func downloadFileFromBlobStorage(destFilePath, accountName, accountKey, containerName, blobName string) error {
+func downloadFileFromBlobStorage(config TranslatorConfig, destFilePath, blobName string) error {
+	accountName := config.BlobAccountName
+	accountKey := config.BlobAccountKey
+	containerName := config.BlobContainerName
 	// Create a default request pipeline using your storage account name and account key.
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
@@ -186,12 +201,13 @@ func downloadFileFromBlobStorage(destFilePath, accountName, accountKey, containe
 
 // getBlobURLWithSASToken generates a Shared Access Signature (SAS) token for a blob in Azure Blob Storage.
 // It takes the following parameters:
-// - accountName: The name of the Azure Storage account.
-// - accountKey: The access key for the Azure Storage account.
-// - containerName: The name of the container in Azure Blob Storage.
+// - config: The TranslatorConfig object.
 // - blobName: The name of the blob in Azure Blob Storage (use "" for container SAS).
 // It returns the generated URL with the SAS query parameter as a string, the SAS token and an error if any.
-func getBlobURLWithSASToken(accountName, accountKey, containerName, blobName string) (string, string, error) {
+func getBlobURLWithSASToken(config TranslatorConfig, blobName string) (string, string, error) {
+	accountName := config.BlobAccountName
+	accountKey := config.BlobAccountKey
+	containerName := config.BlobContainerName
 	// Create a default request pipeline using your storage account name and account key.
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
@@ -273,13 +289,7 @@ func generateUUIDv4WithoutHyphens() string {
 // - destinationFile: The path to save the translated file.
 // - sourceLanguage: The language of the source document if the provided string has zero length, the service will attempt to auto-detect the language.
 // - targetLanguage: The language to translate the document to.
-// - endpoint: The Azure Translator API endpoint.
-// - key: The Azure Translator API key.
-// - region: The Azure region.
-// - blobAccountName: The name of the Azure Storage account.
-// - blobAccountKey: The access key for the Azure Storage account.
-// - blobContainerName: The name of the container in Azure Blob Storage.
-// - verbose: A boolean flag to enable verbose logging.
+// - config: The TranslatorConfig object.
 // It returns an error if any.
 // The process of translation involves the following steps:
 // 1. Generate a UUID for the translation job.
@@ -288,20 +298,28 @@ func generateUUIDv4WithoutHyphens() string {
 // 4. Translate the document.
 // 5. Delete the file from Azure Blob Storage.
 // 6. wait for the translated document to be ready in the target container.
-func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetLanguage, endpoint, key, region, blobAccountName, blobAccountKey, blobContainerName string, timeout int, verbose bool) error {
+func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetLanguage string, config TranslatorConfig) error {
+	// populate endpoint, key, region, blobAccountName, blobContainerName, timeout and verbose with the values from the config object
+	endpoint := config.TranslatorEndpoint
+	key := config.TranslatorKey
+	region := config.TranslatorRegion
+	blobAccountName := config.BlobAccountName
+	blobContainerName := config.BlobContainerName
+	timeout := config.Timeout
+	verbose := config.Verbose
 	// Generate a UUID for the translation job.
 	jobID := generateUUIDv4WithoutHyphens()
 	filename := filepath.Base(fileToTranslate)
 	srcJobID := fmt.Sprintf("%s-%s", jobID, filename)
 	dstJobID := fmt.Sprintf("%s-translated-%s", jobID, filename)
 	// Upload the file to Azure Blob Storage.
-	err := uploadFileToBlobStorage(blobAccountName, blobAccountKey, blobContainerName, fileToTranslate, srcJobID)
+	err := uploadFileToBlobStorage(config, fileToTranslate, srcJobID)
 	if err != nil {
 		return fmt.Errorf("error uploading file to Azure Blob Storage: %v", err)
 	}
 
 	// Generate a JSON document for translation.
-	containerSASurl, containerSASToken, err := getBlobURLWithSASToken(blobAccountName, blobAccountKey, blobContainerName, "")
+	containerSASurl, containerSASToken, err := getBlobURLWithSASToken(config, "")
 	if err != nil {
 		return fmt.Errorf("error generating container SAS token: %v", err)
 	}
@@ -352,7 +370,7 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 		// Wait for the translated document to be ready in the target container.
 		maxTry := timeout
 		for {
-			err = downloadFileFromBlobStorage(destinationFile, blobAccountName, blobAccountKey, blobContainerName, dstJobID)
+			err = downloadFileFromBlobStorage(config, destinationFile, dstJobID)
 			if err == nil {
 				break
 			}
@@ -366,11 +384,11 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	}
 
 	// Delete the file from Azure Blob Storage.
-	err = deleteFileFromBlobStorage(blobAccountName, blobAccountKey, blobContainerName, srcJobID)
+	err = deleteFileFromBlobStorage(config, srcJobID)
 	if err != nil {
 		return fmt.Errorf("error deleting source document: %v", err)
 	}
-	err = deleteFileFromBlobStorage(blobAccountName, blobAccountKey, blobContainerName, dstJobID)
+	err = deleteFileFromBlobStorage(config, dstJobID)
 	if err != nil {
 		return fmt.Errorf("error deleting translated document: %v", err)
 	}

@@ -13,9 +13,16 @@ const (
 )
 
 func TestUploadFileToBlobStorage(t *testing.T) {
-	accountName := os.Getenv("ACCOUNT_NAME")
-	accountKey := os.Getenv("ACCOUNT_KEY")
-	containerName := os.Getenv("CONTAINER_NAME")
+	config := TranslatorConfig{
+		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
+		TranslatorKey:      os.Getenv("TRANSLATOR_KEY"),
+		TranslatorRegion:   os.Getenv("TRANSLATOR_REGION"),
+		BlobAccountName:    os.Getenv("BLOB_STORAGE_ACCOUNT_NAME"),
+		BlobAccountKey:     os.Getenv("BLOB_STORAGE_ACCOUNT_KEY"),
+		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
+		Timeout:            30,
+		Verbose:            true,
+	}
 	filePath := "../../README.md"
 	blobName := BLOB_NAME
 
@@ -23,7 +30,7 @@ func TestUploadFileToBlobStorage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to get absolute path: %v", err)
 	}
-	err = uploadFileToBlobStorage(accountName, accountKey, containerName, absFilePath, blobName)
+	err = uploadFileToBlobStorage(config, absFilePath, blobName)
 
 	if err != nil {
 		t.Errorf("UploadFileToBlobStorage failed: %v", err)
@@ -32,12 +39,19 @@ func TestUploadFileToBlobStorage(t *testing.T) {
 	// Add additional assertions or verifications here
 }
 func TestGetBlobURLWithSASToken(t *testing.T) {
-	accountName := os.Getenv("ACCOUNT_NAME")
-	accountKey := os.Getenv("ACCOUNT_KEY")
-	containerName := os.Getenv("CONTAINER_NAME")
+	config := TranslatorConfig{
+		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
+		TranslatorKey:      os.Getenv("TRANSLATOR_KEY"),
+		TranslatorRegion:   os.Getenv("TRANSLATOR_REGION"),
+		BlobAccountName:    os.Getenv("BLOB_STORAGE_ACCOUNT_NAME"),
+		BlobAccountKey:     os.Getenv("BLOB_STORAGE_ACCOUNT_KEY"),
+		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
+		Timeout:            30,
+		Verbose:            true,
+	}
 	blobName := BLOB_NAME
 
-	urlWithSASToken, _, err := getBlobURLWithSASToken(accountName, accountKey, containerName, blobName)
+	urlWithSASToken, _, err := getBlobURLWithSASToken(config, blobName)
 	fmt.Println(urlWithSASToken)
 	if err != nil {
 		t.Errorf("getBlobURLWithSASToken failed: %v", err)
@@ -53,12 +67,19 @@ func TestGetBlobURLWithSASToken(t *testing.T) {
 }
 
 func TestDeleteFileFromBlobStorage(t *testing.T) {
-	accountName := os.Getenv("ACCOUNT_NAME")
-	accountKey := os.Getenv("ACCOUNT_KEY")
-	containerName := os.Getenv("CONTAINER_NAME")
+	config := TranslatorConfig{
+		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
+		TranslatorKey:      os.Getenv("TRANSLATOR_KEY"),
+		TranslatorRegion:   os.Getenv("TRANSLATOR_REGION"),
+		BlobAccountName:    os.Getenv("BLOB_STORAGE_ACCOUNT_NAME"),
+		BlobAccountKey:     os.Getenv("BLOB_STORAGE_ACCOUNT_KEY"),
+		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
+		Timeout:            30,
+		Verbose:            true,
+	}
 	blobName := BLOB_NAME
 
-	err := deleteFileFromBlobStorage(accountName, accountKey, containerName, blobName)
+	err := deleteFileFromBlobStorage(config, blobName)
 	if err != nil {
 		t.Errorf("DeleteFileFromBlobStorage failed: %v", err)
 	}
@@ -105,14 +126,18 @@ func TestTranslateDocument(t *testing.T) {
 	fileTranslated := "../../README_fr.md"
 	sourceLanguage := "en"
 	targetLanguage := "fr"
-	endpoint := os.Getenv("TRANSLATOR_ENDPOINT")
-	key := os.Getenv("TRANSLATOR_KEY")
-	region := os.Getenv("TRANSLATOR_REGION")
-	blobAccountName := os.Getenv("ACCOUNT_NAME")
-	blobAccountKey := os.Getenv("ACCOUNT_KEY")
-	blobContainerName := os.Getenv("CONTAINER_NAME")
 
-	err := TranslateDocument(fileToTranslate, fileTranslated, sourceLanguage, targetLanguage, endpoint, key, region, blobAccountName, blobAccountKey, blobContainerName, 30, true)
+	config := TranslatorConfig{
+		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
+		TranslatorKey:      os.Getenv("TRANSLATOR_KEY"),
+		TranslatorRegion:   os.Getenv("TRANSLATOR_REGION"),
+		BlobAccountName:    os.Getenv("BLOB_STORAGE_ACCOUNT_NAME"),
+		BlobAccountKey:     os.Getenv("BLOB_STORAGE_ACCOUNT_KEY"),
+		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
+		Timeout:            30,
+		Verbose:            true,
+	}
+	err := TranslateDocument(fileToTranslate, fileTranslated, sourceLanguage, targetLanguage, config)
 	if err != nil {
 		t.Errorf("TranslateDocument failed: %v", err)
 	}

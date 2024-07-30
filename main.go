@@ -44,7 +44,17 @@ func run() error {
 		return err
 	}
 
-	return translator.TranslateDocument(*in, *out, *from, *to, *endpoint, *key, *region, *blobAccount, *blobAccountKey, *blobContainer, *timeout, verbose)
+	config := translator.TranslatorConfig{
+		TranslatorEndpoint: *endpoint,
+		TranslatorKey:      *key,
+		TranslatorRegion:   *region,
+		BlobAccountName:    *blobAccount,
+		BlobAccountKey:     *blobAccountKey,
+		BlobContainerName:  *blobContainer,
+		Timeout:            *timeout,
+		Verbose:            true,
+	}
+	return translator.TranslateDocument(*in, *out, *from, *to, config)
 }
 
 func validateInputs(endpoint, key, region, in, out, to, blobAccount, blobAccountKey, blobContainer string) error {
