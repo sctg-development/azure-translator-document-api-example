@@ -13,6 +13,8 @@ import (
 	"os"
 	"strings"
 	"translator/internal/translator"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Constants for environment variable names
@@ -40,6 +42,10 @@ func main() {
 // It sets up the translator configuration, validates inputs, and performs the translation.
 // It returns an error if any step fails.
 func run() error {
+	// Set up logging
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
+
 	// Parse command-line arguments
 	endpoint := flag.String("endpoint", os.Getenv(envTranslatorEndpoint), "Azure Translator API endpoint")
 	key := flag.String("key", os.Getenv(envTranslatorKey), "Azure Translator API key")
@@ -79,9 +85,18 @@ func run() error {
 		BlobContainerName:  *blobContainer,
 		Timeout:            *timeout,
 		Verbose:            verbose,
+		Logger:             log,
+	}
+
+	// Set log level based on verbose flag
+	if config.Verbose {
+		log.SetLevel(logrus.DebugLevel)
+	} else {
+		log.SetLevel(logrus.InfoLevel)
 	}
 
 	// Perform the translation
+	log.Info("Starting document translation")
 	return translator.TranslateDocument(*in, *out, *from, *to, config)
 }
 

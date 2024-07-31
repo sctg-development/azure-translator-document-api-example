@@ -11,6 +11,7 @@ require (
 require (
 	github.com/Azure/azure-pipeline-go v0.2.3 // indirect
 	github.com/mattn/go-ieproxy v0.0.12 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/net v0.27.0 // indirect
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect

@@ -19,6 +19,7 @@ import (
 	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/emicklei/go-restful/v3/log"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type ATranslateDocument struct {
@@ -55,6 +56,7 @@ type TranslatorConfig struct {
 	TranslatorRegion   string `json:"translatorRegion"`
 	Timeout            int    `json:"timeout"`
 	Verbose            bool   `json:"verbose"`
+	Logger             *logrus.Logger
 }
 
 // uploadFileToBlobStorage uploads a local file to Azure Blob Storage.
@@ -64,6 +66,7 @@ type TranslatorConfig struct {
 // - blobName: The name of the blob in Azure Blob Storage.
 // It returns an error if any.
 func uploadFileToBlobStorage(config TranslatorConfig, filePath, blobName string) error {
+	config.Logger.Debugf("Uploading file %s to blob storage as %s", filePath, blobName)
 	accountName := config.BlobAccountName
 	accountKey := config.BlobAccountKey
 	containerName := config.BlobContainerName
@@ -110,6 +113,7 @@ func uploadFileToBlobStorage(config TranslatorConfig, filePath, blobName string)
 		return err
 	}
 
+	config.Logger.Debugf("Successfully uploaded file to blob storage: %s", blobName)
 	return nil
 }
 
@@ -308,6 +312,7 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	verbose := config.Verbose
 	// Generate a UUID for the translation job.
 	jobID := generateUUIDv4WithoutHyphens()
+	config.Logger.Debugf("Starting translation job %s", jobID)
 	filename := filepath.Base(fileToTranslate)
 	srcJobID := fmt.Sprintf("%s-%s", jobID, filename)
 	dstJobID := fmt.Sprintf("%s-translated-%s", jobID, filename)
@@ -377,6 +382,7 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	if err != nil {
 		return fmt.Errorf("error deleting translated document: %v", err)
 	}
+	config.Logger.Debugf("Translation job %s completed successfully", jobID)
 	return nil
 }
 
@@ -394,7 +400,7 @@ func waitForTranslatedFile(config TranslatorConfig, destinationFile string, dstJ
 		if maxTry <= 0 {
 			return fmt.Errorf("timeout waiting for the translated document")
 		}
-		fmt.Println("File not yet ready, wait for 1s…")
+		config.Logger.Infoln("File not yet ready, wait for 1s…")
 		time.Sleep(1 * time.Second)
 		maxTry--
 	}

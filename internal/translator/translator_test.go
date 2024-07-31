@@ -17,6 +17,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 )
 
 // BLOB_NAME is the name of the blob file used for testing.
@@ -26,6 +28,8 @@ const (
 
 // TestUploadFileToBlobStorage is a test function that tests the uploadFileToBlobStorage function.
 func TestUploadFileToBlobStorage(t *testing.T) {
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
 	// Test configuration
 	config := TranslatorConfig{
 		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
@@ -36,6 +40,7 @@ func TestUploadFileToBlobStorage(t *testing.T) {
 		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
 		Timeout:            30,
 		Verbose:            true,
+		Logger:             log,
 	}
 
 	// File paths
@@ -59,6 +64,8 @@ func TestUploadFileToBlobStorage(t *testing.T) {
 
 // TestGetBlobURLWithSASToken is a test function that tests the getBlobURLWithSASToken function.
 func TestGetBlobURLWithSASToken(t *testing.T) {
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
 	// Test configuration
 	config := TranslatorConfig{
 		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
@@ -69,6 +76,7 @@ func TestGetBlobURLWithSASToken(t *testing.T) {
 		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
 		Timeout:            30,
 		Verbose:            true,
+		Logger:             log,
 	}
 
 	// Blob name
@@ -92,6 +100,8 @@ func TestGetBlobURLWithSASToken(t *testing.T) {
 
 // TestDeleteFileFromBlobStorage is a test function that tests the deleteFileFromBlobStorage function.
 func TestDeleteFileFromBlobStorage(t *testing.T) {
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
 	// Test configuration
 	config := TranslatorConfig{
 		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
@@ -102,6 +112,7 @@ func TestDeleteFileFromBlobStorage(t *testing.T) {
 		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
 		Timeout:            30,
 		Verbose:            true,
+		Logger:             log,
 	}
 
 	// Blob name
@@ -165,6 +176,8 @@ func TestTranslateDocument(t *testing.T) {
 	sourceLanguage := "en"
 	targetLanguage := "fr"
 
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
 	// Test configuration
 	config := TranslatorConfig{
 		TranslatorEndpoint: os.Getenv("TRANSLATOR_ENDPOINT"),
@@ -175,6 +188,7 @@ func TestTranslateDocument(t *testing.T) {
 		BlobContainerName:  os.Getenv("BLOB_STORAGE_CONTAINER_NAME"),
 		Timeout:            30,
 		Verbose:            true,
+		Logger:             log,
 	}
 
 	// Translate document
