@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
-	"github.com/emicklei/go-restful/v3/log"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
@@ -309,7 +308,7 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	region := config.TranslatorRegion
 	blobAccountName := config.BlobAccountName
 	blobContainerName := config.BlobContainerName
-	verbose := config.Verbose
+
 	// Generate a UUID for the translation job.
 	jobID := generateUUIDv4WithoutHyphens()
 	config.Logger.Debugf("Starting translation job %s", jobID)
@@ -327,19 +326,16 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 	if err != nil {
 		return fmt.Errorf("error generating container SAS token: %v", err)
 	}
-	if verbose {
-		log.Printf("containerSASurl: %s", containerSASurl)
-	}
+	config.Logger.Debugf("containerSASurl: %s", containerSASurl)
 
 	sourceSASUrl := fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s?%s", blobAccountName, blobContainerName, srcJobID, containerSASToken)
-	if verbose {
-		log.Printf("sourceSASUrl: %s", sourceSASUrl)
-	}
+
+	config.Logger.Debugf("sourceSASUrl: %s", sourceSASUrl)
 
 	targetSASUrl := fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s?%s", blobAccountName, blobContainerName, dstJobID, containerSASToken)
-	if verbose {
-		log.Printf("targetSASUrl: %s", targetSASUrl)
-	}
+
+	config.Logger.Debugf("targetSASUrl: %s", targetSASUrl)
+
 	jsonDocument, err := generateJSONDocument(sourceSASUrl, targetSASUrl, sourceLanguage, targetLanguage)
 	if err != nil {
 		return fmt.Errorf("error generating JSON document: %v", err)
@@ -364,10 +360,10 @@ func TranslateDocument(fileToTranslate, destinationFile, sourceLanguage, targetL
 
 	}
 	defer res.Body.Close()
-	if verbose {
-		log.Printf("response status:", res.Status)
-		log.Printf("response headers", res.Header)
-	}
+
+	config.Logger.Debugf("response status: %s", res.Status)
+	config.Logger.Debugf("response headers: %v", res.Header)
+
 	if res.StatusCode >= 200 && res.StatusCode < 300 {
 		// Wait for the translated document to be ready in the target container.
 		_ = waitForTranslatedFile(config, destinationFile, dstJobID)
